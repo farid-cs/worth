@@ -16,7 +16,7 @@ const (
 
 type Operation struct {
 	kind int
-	arg int
+	arg int64
 }
 
 func main() {
@@ -79,8 +79,8 @@ func compile(program []Operation, filepath string) {
 	for _, op := range program {
 		switch op.kind {
 		case OP_PLUS:
-			fmt.Fprintf(out, "	pop rax\n");
 			fmt.Fprintf(out, "	pop rdi\n");
+			fmt.Fprintf(out, "	pop rax\n");
 			fmt.Fprintf(out, "	add rax, rdi\n");
 			fmt.Fprintf(out, "	push rax\n");
 		case OP_MINUS:
@@ -138,7 +138,7 @@ func word_to_operation(word string) Operation {
 		op.kind = OP_DUMP
 	default:
 		op.kind = OP_PUSH
-		op.arg, err = strconv.Atoi(word)
+		op.arg, err = strconv.ParseInt(word, 10, 64)
 		if err != nil {
 			panic(err)
 		}
