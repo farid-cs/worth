@@ -41,7 +41,7 @@ fn compile(program: &[Operation], filepath: &str) {
 	writeln!(out, "	syscall");
 	writeln!(out, "	add rsp, r10");
 	writeln!(out, "	ret");
-        writeln!(out, "");
+	writeln!(out, "");
 	writeln!(out, "_start:");
 
 	for operation in program {
