@@ -19,22 +19,49 @@ type Operation struct {
 	arg int64
 }
 
-func main() {
-	var program []Operation
+func word_to_operation(word string) Operation {
+	var op Operation
 	var err error
 
-	if len(os.Args) < 2 {
-		fmt.Printf("usage: %s <filepath>\n", os.Args[0])
-		os.Exit(1)
+	switch word {
+	case "+":
+		op.kind = OP_PLUS
+	case "-":
+		op.kind = OP_MINUS
+	case ".":
+		op.kind = OP_DUMP
+	default:
+		op.kind = OP_PUSH
+		op.arg, err = strconv.ParseInt(word, 10, 64)
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	program, err = load_program(os.Args[1])
+	return op
+}
+
+func load_program(filepath string) ([]Operation, error) {
+	var program []Operation
+	var source []byte
+	var err error
+
+	source, err = os.ReadFile(filepath)
 	if err != nil {
 		panic(err)
 	}
 
-	compile(program, "a.s")
-	exec.Command("fasm", "a.s", "a.out").Run()
+	for i := range source {
+		if source[i] > 127 {
+			return nil, errors.New("not valid ascii")
+		}
+	}
+
+	for _, word := range strings.Fields(string(source)) {
+		program = append(program, word_to_operation(word))
+	}
+
+	return program, nil
 }
 
 func compile(program []Operation, filepath string) {
@@ -102,47 +129,20 @@ func compile(program []Operation, filepath string) {
 
 }
 
-func load_program(filepath string) ([]Operation, error) {
+func main() {
 	var program []Operation
-	var source []byte
 	var err error
 
-	source, err = os.ReadFile(filepath)
+	if len(os.Args) < 2 {
+		fmt.Printf("usage: %s <filepath>\n", os.Args[0])
+		os.Exit(1)
+	}
+
+	program, err = load_program(os.Args[1])
 	if err != nil {
 		panic(err)
 	}
 
-	for i := range source {
-		if source[i] > 127 {
-			return nil, errors.New("not valid ascii")
-		}
-	}
-
-	for _, word := range strings.Fields(string(source)) {
-		program = append(program, word_to_operation(word))
-	}
-
-	return program, nil
-}
-
-func word_to_operation(word string) Operation {
-	var op Operation
-	var err error
-
-	switch word {
-	case "+":
-		op.kind = OP_PLUS
-	case "-":
-		op.kind = OP_MINUS
-	case ".":
-		op.kind = OP_DUMP
-	default:
-		op.kind = OP_PUSH
-		op.arg, err = strconv.ParseInt(word, 10, 64)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	return op
+	compile(program, "a.s")
+	exec.Command("fasm", "a.s", "a.out").Run()
 }
