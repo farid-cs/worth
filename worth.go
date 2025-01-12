@@ -135,7 +135,7 @@ func compile(filepath string) {
 }
 
 func main() {
-	fasm := exec.Command("fasm", "a.s")
+	fasm := exec.Command("fasm", "a.s", "a.out")
 
 	if len(os.Args) < 2 {
 		fmt.Printf("usage: %s <filepath>\n", os.Args[0])
