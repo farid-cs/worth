@@ -1,6 +1,5 @@
 package main
 
-import "errors"
 import "fmt"
 import "os"
 import "os/exec"
@@ -41,9 +40,20 @@ func word_to_operation(word string) Operation {
 	return op
 }
 
-func load_program(filepath string) ([]Operation, error) {
+func generate_program(text string) []Operation {
 	var program []Operation
+
+	for _, word := range strings.Fields(text) {
+		program = append(program, word_to_operation(word))
+	}
+
+	return program
+}
+
+func compile(filepath string) {
 	var source []byte
+	var program []Operation
+	var out *os.File
 	var err error
 
 	source, err = os.ReadFile(filepath)
@@ -53,23 +63,18 @@ func load_program(filepath string) ([]Operation, error) {
 
 	for i := range source {
 		if source[i] > 127 {
-			return nil, errors.New("not valid ascii")
+			panic("invalid ascii")
 		}
 	}
 
-	for _, word := range strings.Fields(string(source)) {
-		program = append(program, word_to_operation(word))
-	}
+	program = generate_program(string(source))
 
-	return program, nil
-}
-
-func compile(program []Operation, filepath string) {
-	out, err := os.Create(filepath)
-
+	out, err = os.Create("a.s")
 	if err != nil {
 		panic(err)
 	}
+
+	defer out.Close()
 
 	fmt.Fprintf(out, "format ELF64 executable\n")
 	fmt.Fprintf(out, "\n")
@@ -130,19 +135,13 @@ func compile(program []Operation, filepath string) {
 }
 
 func main() {
-	var program []Operation
-	var err error
+	fasm := exec.Command("fasm", "a.s")
 
 	if len(os.Args) < 2 {
 		fmt.Printf("usage: %s <filepath>\n", os.Args[0])
 		os.Exit(1)
 	}
 
-	program, err = load_program(os.Args[1])
-	if err != nil {
-		panic(err)
-	}
-
-	compile(program, "a.s")
-	exec.Command("fasm", "a.s", "a.out").Run()
+	compile(os.Args[1])
+	fasm.Run()
 }
