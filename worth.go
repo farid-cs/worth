@@ -4,7 +4,6 @@ import "fmt"
 import "os"
 import "os/exec"
 import "strconv"
-import "strings"
 
 const (
 	OP_PLUS = iota
@@ -13,9 +12,68 @@ const (
 	OP_DUMP
 )
 
+type Token struct {
+	word string
+	line int
+	column int
+}
+
 type Operation struct {
 	kind int
 	arg int64
+}
+
+func isspace(char byte) bool {
+	switch char {
+	case '\t':
+		fallthrough
+	case '\n':
+		fallthrough
+	case '\v':
+		fallthrough
+	case '\f':
+		fallthrough
+	case '\r':
+		fallthrough
+	case ' ':
+		return true
+	}
+	return false
+}
+
+func lex_text(text string) []Token {
+	var tokens []Token
+	var begin = 0
+	var line = 1
+	var column = 1
+
+	for begin != len(text) {
+		if !isspace(text[begin]) {
+			var token Token
+			var end = begin
+
+			for end != len(text) && !isspace(text[end]) {
+				end += 1
+			}
+
+			token.word = text[begin:end]
+			token.column = column
+			token.line = line
+			tokens = append(tokens, token)
+
+			begin = end
+			continue
+		}
+
+		if text[begin] == '\n' {
+			line += 1
+			column = 1
+		}
+
+		begin += 1
+	}
+
+	return tokens
 }
 
 func word_to_operation(word string) Operation {
@@ -40,11 +98,11 @@ func word_to_operation(word string) Operation {
 	return op
 }
 
-func generate_program(text string) []Operation {
+func generate_program(tokens []Token) []Operation {
 	var program []Operation
 
-	for _, word := range strings.Fields(text) {
-		program = append(program, word_to_operation(word))
+	for _, token := range tokens {
+		program = append(program, word_to_operation(token.word))
 	}
 
 	return program
@@ -53,6 +111,7 @@ func generate_program(text string) []Operation {
 func compile(filepath string) {
 	var source []byte
 	var program []Operation
+	var tokens []Token
 	var out *os.File
 	var err error
 
@@ -67,7 +126,9 @@ func compile(filepath string) {
 		}
 	}
 
-	program = generate_program(string(source))
+	tokens = lex_text(string(source))
+
+	program = generate_program(tokens)
 
 	out, err = os.Create("a.s")
 	if err != nil {
