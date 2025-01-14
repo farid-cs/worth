@@ -10,6 +10,7 @@ const (
 	OP_MINUS
 	OP_PUSH
 	OP_DUMP
+	OP_EQUAL
 )
 
 type Token struct {
@@ -89,6 +90,8 @@ func token_to_operation(tok Token) Operation {
 		op.kind = OP_MINUS
 	case ".":
 		op.kind = OP_DUMP
+	case "=":
+		op.kind = OP_EQUAL
 	default:
 		op.kind = OP_PUSH
 		op.arg, err = strconv.ParseInt(tok.word, 10, 64)
@@ -189,6 +192,13 @@ func compile(filepath string) {
 		case OP_DUMP:
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	call dump\n")
+		case OP_EQUAL:
+			out.WriteString("	pop rdi\n")
+			out.WriteString("	pop rdx\n")
+			out.WriteString("	xor rax, rax\n")
+			out.WriteString("	cmp rdx, rdi\n")
+			out.WriteString("	sete al\n")
+			out.WriteString("	push rax\n")
 		}
 	}
 
