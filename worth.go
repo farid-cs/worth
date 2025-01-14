@@ -78,11 +78,11 @@ func lex_text(text string) []Token {
 	return tokens
 }
 
-func word_to_operation(word string) Operation {
+func token_to_operation(tok Token) Operation {
 	var op Operation
 	var err error
 
-	switch word {
+	switch tok.word {
 	case "+":
 		op.kind = OP_PLUS
 	case "-":
@@ -91,9 +91,10 @@ func word_to_operation(word string) Operation {
 		op.kind = OP_DUMP
 	default:
 		op.kind = OP_PUSH
-		op.arg, err = strconv.ParseInt(word, 10, 64)
+		op.arg, err = strconv.ParseInt(tok.word, 10, 64)
 		if err != nil {
-			panic(err)
+			fmt.Printf("%d:%d: %s\n", tok.line, tok.column, err)
+			os.Exit(1)
 		}
 	}
 
@@ -104,7 +105,7 @@ func generate_program(tokens []Token) []Operation {
 	var program []Operation
 
 	for _, token := range tokens {
-		program = append(program, word_to_operation(token.word))
+		program = append(program, token_to_operation(token))
 	}
 
 	return program
