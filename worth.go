@@ -182,16 +182,20 @@ func compile(filepath string) {
 			out.WriteString("	pop rax\n")
 			out.WriteString("	add rax, rdi\n")
 			out.WriteString("	push rax\n")
+
 		case OP_MINUS:
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	sub rax, rdi\n")
 			out.WriteString("	push rax\n")
+
 		case OP_PUSH:
 			fmt.Fprintf(out, "	push %d\n", op.arg)
+
 		case OP_DUMP:
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	call dump\n")
+
 		case OP_EQUAL:
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	pop rdx\n")
