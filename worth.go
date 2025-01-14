@@ -142,7 +142,7 @@ func compile(filepath string) {
 
 	out.WriteString("format ELF64 executable\n")
 	out.WriteString("\n")
-	out.WriteString("entry _start")
+	out.WriteString("entry _start\n")
 	out.WriteString("\n")
 
 	out.WriteString("dump:\n")
@@ -185,7 +185,7 @@ func compile(filepath string) {
 			out.WriteString("	sub rax, rdi\n")
 			out.WriteString("	push rax\n")
 		case OP_PUSH:
-			fmt.Fprintf(out, "	push %d", op.arg)
+			fmt.Fprintf(out, "	push %d\n", op.arg)
 		case OP_DUMP:
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	call dump\n")
