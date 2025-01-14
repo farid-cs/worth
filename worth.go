@@ -11,6 +11,8 @@ const (
 	OP_PUSH
 	OP_DUMP
 	OP_EQUAL
+	OP_IF
+	OP_FI
 )
 
 type Token struct {
@@ -92,6 +94,10 @@ func token_to_operation(tok Token) Operation {
 		op.kind = OP_DUMP
 	case "=":
 		op.kind = OP_EQUAL
+	case "if":
+		op.kind = OP_IF
+	case "fi":
+		op.kind = OP_FI
 	default:
 		op.kind = OP_PUSH
 		op.arg, err = strconv.ParseInt(tok.word, 10, 64)
@@ -119,6 +125,7 @@ func compile(filepath string) {
 	var program []Operation
 	var tokens []Token
 	var out *os.File
+	var branch_count = 0
 	var err error
 
 	source, err = os.ReadFile(filepath)
@@ -203,6 +210,15 @@ func compile(filepath string) {
 			out.WriteString("	cmp rdx, rdi\n")
 			out.WriteString("	sete al\n")
 			out.WriteString("	push rax\n")
+
+		case OP_IF:
+			out.WriteString("	pop rdi\n")
+			out.WriteString("	test rdi, rdi\n")
+			fmt.Fprintf(out, "	je .L%d\n", branch_count)
+
+		case OP_FI:
+			fmt.Fprintf(out, ".L%d:\n", branch_count)
+			branch_count++
 		}
 	}
 
