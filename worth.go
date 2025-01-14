@@ -12,6 +12,7 @@ const (
 	OP_DUMP
 	OP_EQUAL
 	OP_IF
+	OP_ELSE
 	OP_FI
 )
 
@@ -96,6 +97,8 @@ func token_to_operation(tok Token) Operation {
 		op.kind = OP_EQUAL
 	case "if":
 		op.kind = OP_IF
+	case "else":
+		op.kind = OP_ELSE
 	case "fi":
 		op.kind = OP_FI
 	default:
@@ -215,6 +218,11 @@ func compile(filepath string) {
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	test rdi, rdi\n")
 			fmt.Fprintf(out, "	je .L%d\n", branch_count)
+
+		case OP_ELSE:
+			fmt.Fprintf(out, "	jmp .L%d\n", branch_count + 1)
+			fmt.Fprintf(out, ".L%d:\n", branch_count)
+			branch_count++
 
 		case OP_FI:
 			fmt.Fprintf(out, ".L%d:\n", branch_count)
