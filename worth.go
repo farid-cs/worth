@@ -61,16 +61,18 @@ func lex_text(text string) []Token {
 			token.line = line
 			tokens = append(tokens, token)
 
+			column += end - begin
 			begin = end
 			continue
 		}
 
 		if text[begin] == '\n' {
 			line += 1
-			column = 1
+			column = 0
 		}
 
 		begin += 1
+		column += 1
 	}
 
 	return tokens
