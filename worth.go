@@ -82,42 +82,38 @@ func lex_text(text string) []Token {
 	return tokens
 }
 
-func token_to_operation(tok Token) Operation {
-	var op Operation
-	var err error
-
-	switch tok.word {
-	case "+":
-		op.kind = OP_PLUS
-	case "-":
-		op.kind = OP_MINUS
-	case ".":
-		op.kind = OP_DUMP
-	case "=":
-		op.kind = OP_EQUAL
-	case "if":
-		op.kind = OP_IF
-	case "else":
-		op.kind = OP_ELSE
-	case "fi":
-		op.kind = OP_FI
-	default:
-		op.kind = OP_PUSH
-		op.arg, err = strconv.ParseInt(tok.word, 10, 64)
-		if err != nil {
-			fmt.Printf("%d:%d: %s\n", tok.line, tok.column, err)
-			os.Exit(1)
-		}
-	}
-
-	return op
-}
-
 func generate_program(tokens []Token) []Operation {
 	var program []Operation
 
-	for _, token := range tokens {
-		program = append(program, token_to_operation(token))
+	for _, tok := range tokens {
+		var op Operation
+		var err error
+
+		switch tok.word {
+		case "+":
+			op.kind = OP_PLUS
+		case "-":
+			op.kind = OP_MINUS
+		case ".":
+			op.kind = OP_DUMP
+		case "=":
+			op.kind = OP_EQUAL
+		case "if":
+			op.kind = OP_IF
+		case "else":
+			op.kind = OP_ELSE
+		case "fi":
+			op.kind = OP_FI
+		default:
+			op.kind = OP_PUSH
+			op.arg, err = strconv.ParseInt(tok.word, 10, 64)
+			if err != nil {
+				fmt.Printf("%d:%d: %s\n", tok.line, tok.column, err)
+				os.Exit(1)
+			}
+		}
+
+		program = append(program, op)
 	}
 
 	return program
