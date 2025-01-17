@@ -25,6 +25,8 @@ type Token struct {
 type Operation struct {
 	kind int
 	arg int64
+	line int
+	column int
 }
 
 func isspace(char byte) bool {
@@ -84,9 +86,10 @@ func lex_text(text string) []Token {
 
 func generate_program(tokens []Token) []Operation {
 	var program []Operation
+	var branch_count int64 = 0
 
 	for _, tok := range tokens {
-		var op Operation
+		var op = Operation{arg: -1}
 		var err error
 
 		switch tok.word {
@@ -113,7 +116,49 @@ func generate_program(tokens []Token) []Operation {
 			}
 		}
 
+		op.line = tok.line
+		op.column = tok.column
+
 		program = append(program, op)
+	}
+
+	for i := 0; i != len(program); i++ {
+	link:
+		switch program[i].kind {
+		case OP_IF:
+			for j := i; j != len(program); j++ {
+				if program[j].kind == OP_ELSE || program[j].kind == OP_FI {
+					program[i].arg = branch_count
+					program[j].arg = branch_count
+					branch_count++
+					break link
+				}
+			}
+			fmt.Printf("%d:%d: unterminated if block\n", program[i].line, program[i].column)
+			os.Exit(1)
+
+		case OP_ELSE:
+			if program[i].arg == -1 {
+				fmt.Printf("%d:%d: `else` of non-existent if block\n", program[i].line, program[i].column)
+				os.Exit(1)
+			}
+			for j := i; j != len(program); j++ {
+				if program[j].kind == OP_FI {
+					program[j].arg = branch_count
+					branch_count++
+					break link
+				}
+			}
+			fmt.Printf("%d:%d: unterminated else block\n", program[i].line, program[i].column)
+			os.Exit(1)
+
+		case OP_FI:
+			if program[i].arg == -1 {
+				fmt.Printf("%d:%d: `fi` of a non-existent if block\n", program[i].line, program[i].column)
+				os.Exit(1)
+			}
+
+		}
 	}
 
 	return program
@@ -124,7 +169,6 @@ func compile(filepath string) {
 	var program []Operation
 	var tokens []Token
 	var out *os.File
-	var branch_count = 0
 	var err error
 
 	source, err = os.ReadFile(filepath)
@@ -213,16 +257,14 @@ func compile(filepath string) {
 		case OP_IF:
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	test rdi, rdi\n")
-			fmt.Fprintf(out, "	je .L%d\n", branch_count)
+			fmt.Fprintf(out, "	je .L%d\n", op.arg)
 
 		case OP_ELSE:
-			fmt.Fprintf(out, "	jmp .L%d\n", branch_count + 1)
-			fmt.Fprintf(out, ".L%d:\n", branch_count)
-			branch_count++
+			fmt.Fprintf(out, "	jmp .L%d\n", op.arg + 1)
+			fmt.Fprintf(out, ".L%d:\n", op.arg)
 
 		case OP_FI:
-			fmt.Fprintf(out, ".L%d:\n", branch_count)
-			branch_count++
+			fmt.Fprintf(out, ".L%d:\n", op.arg)
 		}
 	}
 
