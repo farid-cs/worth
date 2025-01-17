@@ -164,29 +164,8 @@ func generate_program(tokens []Token) []Operation {
 	return program
 }
 
-func compile(filepath string) {
-	var source []byte
-	var program []Operation
-	var tokens []Token
-	var out *os.File
-	var err error
-
-	source, err = os.ReadFile(filepath)
-	if err != nil {
-		panic(err)
-	}
-
-	for i := range source {
-		if source[i] > 127 {
-			panic("invalid ascii")
-		}
-	}
-
-	tokens = lex_text(string(source))
-
-	program = generate_program(tokens)
-
-	out, err = os.Create("a.s")
+func translate_to_assembly(program []Operation) {
+	out, err := os.Create("a.s")
 	if err != nil {
 		panic(err)
 	}
@@ -271,7 +250,30 @@ func compile(filepath string) {
 	out.WriteString("	mov rax, 60\n")
 	out.WriteString("	mov rdi, 0\n")
 	out.WriteString("	syscall\n")
+}
 
+func compile(filepath string) {
+	var source []byte
+	var tokens []Token
+	var program []Operation
+	var err error
+
+	source, err = os.ReadFile(filepath)
+	if err != nil {
+		panic(err)
+	}
+
+	for i := range source {
+		if source[i] > 127 {
+			panic("invalid ascii")
+		}
+	}
+
+	tokens = lex_text(string(source))
+
+	program = generate_program(tokens)
+
+	translate_to_assembly(program)
 }
 
 func main() {
