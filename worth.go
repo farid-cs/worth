@@ -87,6 +87,7 @@ func lex_text(text string) []Token {
 func generate_program(tokens []Token) []Operation {
 	var program []Operation
 	var branch_count int64 = 0
+	var stack []int64
 
 	for _, tok := range tokens {
 		var op = Operation{arg: -1}
@@ -123,42 +124,35 @@ func generate_program(tokens []Token) []Operation {
 	}
 
 	for i := 0; i != len(program); i++ {
-	link:
 		switch program[i].kind {
 		case OP_IF:
-			for j := i; j != len(program); j++ {
-				if program[j].kind == OP_ELSE || program[j].kind == OP_FI {
-					program[i].arg = branch_count
-					program[j].arg = branch_count
-					branch_count++
-					break link
-				}
-			}
-			fmt.Printf("%d:%d: unterminated if block\n", program[i].line, program[i].column)
-			os.Exit(1)
+			program[i].arg = branch_count
+			stack = append(stack, branch_count)
+			branch_count++
 
 		case OP_ELSE:
-			if program[i].arg == -1 {
+			if len(stack) == 0 {
 				fmt.Printf("%d:%d: `else` of non-existent if block\n", program[i].line, program[i].column)
 				os.Exit(1)
 			}
-			for j := i; j != len(program); j++ {
-				if program[j].kind == OP_FI {
-					program[j].arg = branch_count
-					branch_count++
-					break link
-				}
-			}
-			fmt.Printf("%d:%d: unterminated else block\n", program[i].line, program[i].column)
-			os.Exit(1)
+			program[i].arg = stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			stack = append(stack, branch_count)
+			branch_count++
 
 		case OP_FI:
-			if program[i].arg == -1 {
+			if len(stack) == 0 {
 				fmt.Printf("%d:%d: `fi` of a non-existent if block\n", program[i].line, program[i].column)
 				os.Exit(1)
 			}
-
+			program[i].arg = stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
 		}
+	}
+
+	if len(stack) > 0 {
+		fmt.Println("unterminated if block")
+		os.Exit(1)
 	}
 
 	return program
