@@ -172,28 +172,28 @@ func translate_to_assembly(program []Operation) {
 	out.WriteString("\n")
 
 	out.WriteString("dump:\n")
-	out.WriteString("	mov rax, rdi\n")
-	out.WriteString("	mov r10, 0\n")
-	out.WriteString("	dec rsp\n")
-	out.WriteString("	mov byte [rsp], 10\n")
-	out.WriteString("	inc r10\n")
+	out.WriteString("	mov	rax, rdi\n")
+	out.WriteString("	mov	r10, 0\n")
+	out.WriteString("	dec	rsp\n")
+	out.WriteString("	mov	byte [rsp], 10\n")
+	out.WriteString("	inc	r10\n")
 	out.WriteString(".prepend_digit:\n")
-	out.WriteString("	mov rdx, 0\n")
-	out.WriteString("	mov rbx, 10\n")
-	out.WriteString("	div rbx\n")
-	out.WriteString("	add rdx, 48\n")
-	out.WriteString("	dec rsp\n")
-	out.WriteString("	mov [rsp], dl\n")
-	out.WriteString("	inc r10\n")
-	out.WriteString("	cmp rax, 0\n")
-	out.WriteString("	jne .prepend_digit\n")
+	out.WriteString("	mov	rdx, 0\n")
+	out.WriteString("	mov	rbx, 10\n")
+	out.WriteString("	div	rbx\n")
+	out.WriteString("	add	rdx, 48\n")
+	out.WriteString("	dec	rsp\n")
+	out.WriteString("	mov	[rsp], dl\n")
+	out.WriteString("	inc	r10\n")
+	out.WriteString("	cmp	rax, 0\n")
+	out.WriteString("	jne	.prepend_digit\n")
 	out.WriteString(".print_digit:\n")
-	out.WriteString("	mov rax, 1\n")
-	out.WriteString("	mov rdi, 1\n")
-	out.WriteString("	mov rsi, rsp\n")
-	out.WriteString("	mov rdx, r10\n")
+	out.WriteString("	mov	rax, 1\n")
+	out.WriteString("	mov	rdi, 1\n")
+	out.WriteString("	mov	rsi, rsp\n")
+	out.WriteString("	mov	rdx, r10\n")
 	out.WriteString("	syscall\n")
-	out.WriteString("	add rsp, r10\n")
+	out.WriteString("	add	rsp, r10\n")
 	out.WriteString("	ret\n")
 	out.WriteString("\n")
 	out.WriteString("_start:\n")
@@ -201,36 +201,36 @@ func translate_to_assembly(program []Operation) {
 	for _, op := range program {
 		switch op.kind {
 		case OP_PLUS:
-			out.WriteString("	pop rdi\n")
-			out.WriteString("	pop rax\n")
-			out.WriteString("	add rax, rdi\n")
-			out.WriteString("	push rax\n")
+			out.WriteString("	pop	rdi\n")
+			out.WriteString("	pop	rax\n")
+			out.WriteString("	add	rax, rdi\n")
+			out.WriteString("	push	rax\n")
 
 		case OP_MINUS:
-			out.WriteString("	pop rdi\n")
-			out.WriteString("	pop rax\n")
-			out.WriteString("	sub rax, rdi\n")
-			out.WriteString("	push rax\n")
+			out.WriteString("	pop	rdi\n")
+			out.WriteString("	pop	rax\n")
+			out.WriteString("	sub	rax, rdi\n")
+			out.WriteString("	push	rax\n")
 
 		case OP_PUSH:
-			fmt.Fprintf(out, "	push %d\n", op.arg)
+			fmt.Fprintf(out, "	push	%d\n", op.arg)
 
 		case OP_DUMP:
-			out.WriteString("	pop rdi\n")
-			out.WriteString("	call dump\n")
+			out.WriteString("	pop	rdi\n")
+			out.WriteString("	call	dump\n")
 
 		case OP_EQUAL:
-			out.WriteString("	pop rdi\n")
-			out.WriteString("	pop rdx\n")
-			out.WriteString("	xor rax, rax\n")
-			out.WriteString("	cmp rdx, rdi\n")
-			out.WriteString("	sete al\n")
-			out.WriteString("	push rax\n")
+			out.WriteString("	pop	rdi\n")
+			out.WriteString("	pop	rdx\n")
+			out.WriteString("	xor	rax, rax\n")
+			out.WriteString("	cmp	rdx, rdi\n")
+			out.WriteString("	sete	al\n")
+			out.WriteString("	push	rax\n")
 
 		case OP_IF:
-			out.WriteString("	pop rdi\n")
-			out.WriteString("	test rdi, rdi\n")
-			fmt.Fprintf(out, "	je .L%d\n", op.arg)
+			out.WriteString("	pop	rdi\n")
+			out.WriteString("	test	rdi, rdi\n")
+			fmt.Fprintf(out, "	je	.L%d\n", op.arg)
 
 		case OP_ELSE:
 			fmt.Fprintf(out, "	jmp .L%d\n", op.arg + 1)
@@ -241,8 +241,8 @@ func translate_to_assembly(program []Operation) {
 		}
 	}
 
-	out.WriteString("	mov rax, 60\n")
-	out.WriteString("	mov rdi, 0\n")
+	out.WriteString("	mov	rax, 60\n")
+	out.WriteString("	mov	rdi, 0\n")
 	out.WriteString("	syscall\n")
 }
 
