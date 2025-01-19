@@ -1,7 +1,8 @@
-30 20 + .
-800 700 - .
-10 20 = if
-	1 .
-else
-	0 .
-fi
+10 while dup 0 > do
+	2 1 = if
+		90 .
+	else
+		100 .
+	fi
+	1 -
+done
