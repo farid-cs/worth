@@ -15,6 +15,7 @@ const (
 	OP_ELSE
 	OP_FI
 	OP_DUP
+	OP_GT
 )
 
 type Token struct {
@@ -111,6 +112,8 @@ func generate_program(tokens []Token) []Operation {
 			op.kind = OP_FI
 		case "dup":
 			op.kind = OP_DUP
+		case ">":
+			op.kind = OP_GT
 		default:
 			op.kind = OP_PUSH
 			op.arg, err = strconv.ParseInt(tok.word, 10, 64)
@@ -246,6 +249,14 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	pop	rdi\n")
 			out.WriteString("	push	rdi\n")
 			out.WriteString("	push	rdi\n")
+
+		case OP_GT:
+			out.WriteString("	pop	rdi\n")
+			out.WriteString("	pop	rdx\n")
+			out.WriteString("	xor	rax, rax\n")
+			out.WriteString("	cmp	rdx, rdi\n")
+			out.WriteString("	setg	al\n")
+			out.WriteString("	push	rax\n")
 		}
 	}
 
