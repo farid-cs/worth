@@ -16,6 +16,9 @@ const (
 	OP_FI
 	OP_DUP
 	OP_GT
+	OP_WHILE
+	OP_DO
+	OP_DONE
 )
 
 type Token struct {
@@ -114,6 +117,12 @@ func generate_program(tokens []Token) []Operation {
 			op.kind = OP_DUP
 		case ">":
 			op.kind = OP_GT
+		case "while":
+			op.kind = OP_WHILE
+		case "do":
+			op.kind = OP_DO
+		case "done":
+			op.kind = OP_DONE
 		default:
 			op.kind = OP_PUSH
 			op.arg, err = strconv.ParseInt(tok.word, 10, 64)
@@ -153,11 +162,29 @@ func generate_program(tokens []Token) []Operation {
 			}
 			program[i].arg = stack[len(stack)-1]
 			stack = stack[:len(stack)-1]
+
+		case OP_WHILE:
+			program[i].arg = branch_count
+			stack = append(stack, branch_count)
+			branch_count++
+
+		case OP_DO:
+			program[i].arg = branch_count
+			stack = append(stack, branch_count)
+			branch_count++
+
+		case OP_DONE:
+			if len(stack) < 2 {
+				fmt.Printf("%d:%d: `done` of a non-existent `while` or `do` block\n", program[i].line, program[i].column)
+				os.Exit(1)
+			}
+			program[i].arg = stack[len(stack)-2]
+			stack = stack[:len(stack)-2]
 		}
 	}
 
 	if len(stack) > 0 {
-		fmt.Println("unterminated if block")
+		fmt.Println("unterminated while or if block")
 		os.Exit(1)
 	}
 
@@ -207,25 +234,30 @@ func translate_to_assembly(program []Operation) {
 	for _, op := range program {
 		switch op.kind {
 		case OP_PLUS:
+			out.WriteString("	;; -- add --\n")
 			out.WriteString("	pop	rdi\n")
 			out.WriteString("	pop	rax\n")
 			out.WriteString("	add	rax, rdi\n")
 			out.WriteString("	push	rax\n")
 
 		case OP_MINUS:
+			out.WriteString("	;; -- subtract --\n")
 			out.WriteString("	pop	rdi\n")
 			out.WriteString("	pop	rax\n")
 			out.WriteString("	sub	rax, rdi\n")
 			out.WriteString("	push	rax\n")
 
 		case OP_PUSH:
+			out.WriteString("	;; -- push --\n")
 			fmt.Fprintf(out, "	push	%d\n", op.arg)
 
 		case OP_DUMP:
+			out.WriteString("	;; -- dump --\n")
 			out.WriteString("	pop	rdi\n")
 			out.WriteString("	call	dump\n")
 
 		case OP_EQUAL:
+			out.WriteString("	;; -- equal --\n")
 			out.WriteString("	pop	rdi\n")
 			out.WriteString("	pop	rdx\n")
 			out.WriteString("	xor	rax, rax\n")
@@ -234,29 +266,49 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	push	rax\n")
 
 		case OP_IF:
+			out.WriteString("	;; -- if --\n")
 			out.WriteString("	pop	rdi\n")
 			out.WriteString("	test	rdi, rdi\n")
 			fmt.Fprintf(out, "	je	.L%d\n", op.arg)
 
 		case OP_ELSE:
+			out.WriteString("	;; -- else --\n")
 			fmt.Fprintf(out, "	jmp .L%d\n", op.arg + 1)
 			fmt.Fprintf(out, ".L%d:\n", op.arg)
 
 		case OP_FI:
+			out.WriteString("	;; -- fi --\n")
 			fmt.Fprintf(out, ".L%d:\n", op.arg)
 
 		case OP_DUP:
+			out.WriteString("	;; -- dup --\n")
 			out.WriteString("	pop	rdi\n")
 			out.WriteString("	push	rdi\n")
 			out.WriteString("	push	rdi\n")
 
 		case OP_GT:
+			out.WriteString("	;; -- greater --\n")
 			out.WriteString("	pop	rdi\n")
 			out.WriteString("	pop	rdx\n")
 			out.WriteString("	xor	rax, rax\n")
 			out.WriteString("	cmp	rdx, rdi\n")
 			out.WriteString("	setg	al\n")
 			out.WriteString("	push	rax\n")
+
+		case OP_WHILE:
+			out.WriteString("	;; -- while --\n")
+			fmt.Fprintf(out, ".L%d:\n", op.arg)
+
+		case OP_DO:
+			out.WriteString("	;; -- do --\n")
+			out.WriteString("	pop	rdi\n")
+			out.WriteString("	test	rdi, rdi\n")
+			fmt.Fprintf(out, "	je	.L%d\n", op.arg)
+
+		case OP_DONE:
+			out.WriteString("	;; -- done --\n")
+			fmt.Fprintf(out, "	jmp .L%d\n", op.arg)
+			fmt.Fprintf(out, ".L%d:\n", op.arg + 1)
 		}
 	}
 
