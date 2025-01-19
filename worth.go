@@ -22,7 +22,8 @@ const (
 )
 
 type Token struct {
-	word string
+	kind int
+	push int64
 	line int
 	column int
 }
@@ -52,6 +53,49 @@ func isspace(char byte) bool {
 	return false
 }
 
+func NewToken(word string, line int, column int) Token {
+	var tok Token
+	var err error
+
+	tok.line = line
+	tok.column = column
+
+	switch word {
+	case "+":
+		tok.kind = OP_PLUS
+	case "-":
+		tok.kind = OP_MINUS
+	case ".":
+		tok.kind = OP_DUMP
+	case "=":
+		tok.kind = OP_EQUAL
+	case "if":
+		tok.kind = OP_IF
+	case "else":
+		tok.kind = OP_ELSE
+	case "fi":
+		tok.kind = OP_FI
+	case "dup":
+		tok.kind = OP_DUP
+	case ">":
+		tok.kind = OP_GT
+	case "while":
+		tok.kind = OP_WHILE
+	case "do":
+		tok.kind = OP_DO
+	case "done":
+		tok.kind = OP_DONE
+	default:
+		tok.push, err = strconv.ParseInt(word, 10, 64)
+		if err != nil {
+			fmt.Printf("%d:%d: %s\n", tok.line, tok.column, err)
+			os.Exit(1)
+		}
+		tok.kind = OP_PUSH
+	}
+	return tok
+}
+
 func lex_text(text string) []Token {
 	var tokens []Token
 	var begin = 0
@@ -67,9 +111,7 @@ func lex_text(text string) []Token {
 				end += 1
 			}
 
-			token.word = text[begin:end]
-			token.column = column
-			token.line = line
+			token = NewToken(text[begin:end], line, column)
 			tokens = append(tokens, token)
 
 			column += end - begin
@@ -95,45 +137,14 @@ func generate_program(tokens []Token) []Operation {
 	var stack []int64
 
 	for _, tok := range tokens {
-		var op = Operation{arg: -1}
-		var err error
+		op := Operation{arg: -1}
 
-		switch tok.word {
-		case "+":
-			op.kind = OP_PLUS
-		case "-":
-			op.kind = OP_MINUS
-		case ".":
-			op.kind = OP_DUMP
-		case "=":
-			op.kind = OP_EQUAL
-		case "if":
-			op.kind = OP_IF
-		case "else":
-			op.kind = OP_ELSE
-		case "fi":
-			op.kind = OP_FI
-		case "dup":
-			op.kind = OP_DUP
-		case ">":
-			op.kind = OP_GT
-		case "while":
-			op.kind = OP_WHILE
-		case "do":
-			op.kind = OP_DO
-		case "done":
-			op.kind = OP_DONE
-		default:
-			op.kind = OP_PUSH
-			op.arg, err = strconv.ParseInt(tok.word, 10, 64)
-			if err != nil {
-				fmt.Printf("%d:%d: %s\n", tok.line, tok.column, err)
-				os.Exit(1)
-			}
-		}
-
+		op.kind = tok.kind
 		op.line = tok.line
 		op.column = tok.column
+		if op.kind == OP_PUSH {
+			op.arg = tok.push
+		}
 
 		program = append(program, op)
 	}
