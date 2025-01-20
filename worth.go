@@ -23,14 +23,14 @@ const (
 
 type Token struct {
 	kind int
-	push int64
+	push int
 	line int
 	column int
 }
 
 type Operation struct {
 	kind int
-	arg int64
+	arg int
 	line int
 	column int
 }
@@ -86,7 +86,7 @@ func NewToken(word string, line int, column int) Token {
 	case "done":
 		tok.kind = OP_DONE
 	default:
-		tok.push, err = strconv.ParseInt(word, 10, 64)
+		tok.push, err = strconv.Atoi(word)
 		if err != nil {
 			fmt.Printf("%d:%d: %s\n", tok.line, tok.column, err)
 			os.Exit(1)
@@ -133,8 +133,7 @@ func lex_text(text string) []Token {
 
 func generate_program(tokens []Token) []Operation {
 	var program []Operation
-	var branch_count int64 = 0
-	var stack []int64
+	var stack []int
 
 	for _, tok := range tokens {
 		op := Operation{arg: -1}
@@ -149,47 +148,41 @@ func generate_program(tokens []Token) []Operation {
 		program = append(program, op)
 	}
 
-	for i := 0; i != len(program); i++ {
-		switch program[i].kind {
+	for addr, op := range program {
+		switch op.kind {
 		case OP_IF:
-			program[i].arg = branch_count
-			stack = append(stack, branch_count)
-			branch_count++
+			stack = append(stack, addr)
 
 		case OP_ELSE:
-			if len(stack) == 0 {
-				fmt.Printf("%d:%d: `else` of non-existent if block\n", program[i].line, program[i].column)
+			if len(stack) < 1 {
+				fmt.Printf("%d:%d: `else` of non-existent if block\n", op.line, op.column)
 				os.Exit(1)
 			}
-			program[i].arg = stack[len(stack)-1]
+			program[stack[len(stack)-1]].arg = addr
 			stack = stack[:len(stack)-1]
-			stack = append(stack, branch_count)
-			branch_count++
+			stack = append(stack, addr)
 
 		case OP_FI:
-			if len(stack) == 0 {
-				fmt.Printf("%d:%d: `fi` of a non-existent if block\n", program[i].line, program[i].column)
+			if len(stack) < 1 {
+				fmt.Printf("%d:%d: `fi` of a non-existent if block\n", op.line, op.column)
 				os.Exit(1)
 			}
-			program[i].arg = stack[len(stack)-1]
+			program[stack[len(stack)-1]].arg = addr
 			stack = stack[:len(stack)-1]
 
 		case OP_WHILE:
-			program[i].arg = branch_count
-			stack = append(stack, branch_count)
-			branch_count++
+			stack = append(stack, addr)
 
 		case OP_DO:
-			program[i].arg = branch_count
-			stack = append(stack, branch_count)
-			branch_count++
+			stack = append(stack, addr)
 
 		case OP_DONE:
 			if len(stack) < 2 {
-				fmt.Printf("%d:%d: `done` of a non-existent `while` or `do` block\n", program[i].line, program[i].column)
+				fmt.Printf("%d:%d: `done` of a non-existent `while` or `do` block\n", op.line, op.column)
 				os.Exit(1)
 			}
-			program[i].arg = stack[len(stack)-2]
+			program[stack[len(stack)-1]].arg = addr;
+			program[addr].arg = stack[len(stack)-2];
 			stack = stack[:len(stack)-2]
 		}
 	}
@@ -242,7 +235,7 @@ func translate_to_assembly(program []Operation) {
 	out.WriteString("\n")
 	out.WriteString("_start:\n")
 
-	for _, op := range program {
+	for addr, op := range program {
 		switch op.kind {
 		case OP_PLUS:
 			out.WriteString("	;; -- add --\n")
@@ -280,16 +273,16 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	;; -- if --\n")
 			out.WriteString("	pop	rdi\n")
 			out.WriteString("	test	rdi, rdi\n")
-			fmt.Fprintf(out, "	je	.L%d\n", op.arg)
+			fmt.Fprintf(out, "	je	.addr_%d\n", op.arg)
 
 		case OP_ELSE:
 			out.WriteString("	;; -- else --\n")
-			fmt.Fprintf(out, "	jmp .L%d\n", op.arg + 1)
-			fmt.Fprintf(out, ".L%d:\n", op.arg)
+			fmt.Fprintf(out, "	jmp .addr_%d\n", op.arg)
+			fmt.Fprintf(out, ".addr_%d:\n", addr)
 
 		case OP_FI:
 			out.WriteString("	;; -- fi --\n")
-			fmt.Fprintf(out, ".L%d:\n", op.arg)
+			fmt.Fprintf(out, ".addr_%d:\n", addr)
 
 		case OP_DUP:
 			out.WriteString("	;; -- dup --\n")
@@ -308,18 +301,18 @@ func translate_to_assembly(program []Operation) {
 
 		case OP_WHILE:
 			out.WriteString("	;; -- while --\n")
-			fmt.Fprintf(out, ".L%d:\n", op.arg)
+			fmt.Fprintf(out, ".addr_%d:\n", addr)
 
 		case OP_DO:
 			out.WriteString("	;; -- do --\n")
 			out.WriteString("	pop	rdi\n")
 			out.WriteString("	test	rdi, rdi\n")
-			fmt.Fprintf(out, "	je	.L%d\n", op.arg)
+			fmt.Fprintf(out, "	je	.addr_%d\n", op.arg)
 
 		case OP_DONE:
 			out.WriteString("	;; -- done --\n")
-			fmt.Fprintf(out, "	jmp .L%d\n", op.arg)
-			fmt.Fprintf(out, ".L%d:\n", op.arg + 1)
+			fmt.Fprintf(out, "	jmp .addr_%d\n", op.arg)
+			fmt.Fprintf(out, ".addr_%d:\n", addr)
 		}
 	}
 
