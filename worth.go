@@ -188,7 +188,7 @@ func generate_program(tokens []Token) []Operation {
 	}
 
 	if len(stack) > 0 {
-		fmt.Println("unterminated while or if block")
+		fmt.Fprintln(os.Stderr, "unterminated while or if block")
 		os.Exit(1)
 	}
 
