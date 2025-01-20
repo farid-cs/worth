@@ -88,7 +88,7 @@ func NewToken(word string, line int, column int) Token {
 	default:
 		tok.push, err = strconv.Atoi(word)
 		if err != nil {
-			fmt.Printf("%d:%d: %s\n", tok.line, tok.column, err)
+			fmt.Fprintf(os.Stderr, "%d:%d: %s\n", tok.line, tok.column, err)
 			os.Exit(1)
 		}
 		tok.kind = OP_PUSH
@@ -155,7 +155,7 @@ func generate_program(tokens []Token) []Operation {
 
 		case OP_ELSE:
 			if len(stack) < 1 {
-				fmt.Printf("%d:%d: `else` of non-existent if block\n", op.line, op.column)
+				fmt.Fprintf(os.Stderr, "%d:%d: `else` of non-existent if block\n", op.line, op.column)
 				os.Exit(1)
 			}
 			program[stack[len(stack)-1]].arg = addr
@@ -164,7 +164,7 @@ func generate_program(tokens []Token) []Operation {
 
 		case OP_FI:
 			if len(stack) < 1 {
-				fmt.Printf("%d:%d: `fi` of a non-existent if block\n", op.line, op.column)
+				fmt.Fprintf(os.Stderr, "%d:%d: `fi` of a non-existent if block\n", op.line, op.column)
 				os.Exit(1)
 			}
 			program[stack[len(stack)-1]].arg = addr
@@ -178,7 +178,7 @@ func generate_program(tokens []Token) []Operation {
 
 		case OP_DONE:
 			if len(stack) < 2 {
-				fmt.Printf("%d:%d: `done` of a non-existent `while` or `do` block\n", op.line, op.column)
+				fmt.Fprintf(os.Stderr, "%d:%d: `done` of a non-existent `while` or `do` block\n", op.line, op.column)
 				os.Exit(1)
 			}
 			program[stack[len(stack)-1]].arg = addr;
@@ -349,7 +349,7 @@ func main() {
 	fasm := exec.Command("fasm", "a.s", "a.out")
 
 	if len(os.Args) < 2 {
-		fmt.Printf("usage: %s <filepath>\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "usage: %s <filepath>\n", os.Args[0])
 		os.Exit(1)
 	}
 
