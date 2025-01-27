@@ -98,33 +98,32 @@ func NewToken(word string, line int, column int) Token {
 
 func lex_text(text string) []Token {
 	var tokens []Token
-	var begin = 0
 	var line = 1
 	var column = 1
 
-	for begin != len(text) {
-		if !isspace(text[begin]) {
+	for len(text) > 0 {
+		if !isspace(text[0]) {
 			var token Token
-			var end = begin
+			var toklen = 0
 
-			for end != len(text) && !isspace(text[end]) {
-				end += 1
+			for toklen != len(text) && !isspace(text[toklen]) {
+				toklen += 1
 			}
 
-			token = NewToken(text[begin:end], line, column)
+			token = NewToken(text[:toklen], line, column)
 			tokens = append(tokens, token)
 
-			column += end - begin
-			begin = end
+			column += toklen
+			text = text[toklen:]
 			continue
 		}
 
-		if text[begin] == '\n' {
+		if text[0] == '\n' {
 			line += 1
 			column = 0
 		}
 
-		begin += 1
+		text = text[1:]
 		column += 1
 	}
 
