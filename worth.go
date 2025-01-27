@@ -333,7 +333,8 @@ func compile(filepath string) {
 
 	for i := range source {
 		if source[i] > 127 {
-			panic("invalid ascii")
+			fmt.Fprintf(os.Stderr, "error: invalid ascii\n")
+			os.Exit(1)
 		}
 	}
 
