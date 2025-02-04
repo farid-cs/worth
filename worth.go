@@ -102,29 +102,28 @@ func lex_text(text string) []Token {
 	var column = 1
 
 	for len(text) > 0 {
-		if !isspace(text[0]) {
-			var token Token
-			var toklen = 0
+		var token Token
+		var toklen = 0
 
-			for toklen != len(text) && !isspace(text[toklen]) {
-				toklen += 1
+		if isspace(text[0]) {
+			if text[0] == '\n' {
+				line += 1
+				column = 0
 			}
-
-			token = NewToken(text[:toklen], line, column)
-			tokens = append(tokens, token)
-
-			column += toklen
-			text = text[toklen:]
+			text = text[1:]
+			column += 1
 			continue
 		}
 
-		if text[0] == '\n' {
-			line += 1
-			column = 0
+		for toklen != len(text) && !isspace(text[toklen]) {
+			toklen += 1
 		}
 
-		text = text[1:]
-		column += 1
+		token = NewToken(text[:toklen], line, column)
+		tokens = append(tokens, token)
+
+		column += toklen
+		text = text[toklen:]
 	}
 
 	return tokens
