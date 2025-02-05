@@ -66,7 +66,7 @@ func NewToken(word string, line int, column int) Token {
 		tok.kind = OP_PLUS
 	case "-":
 		tok.kind = OP_MINUS
-	case ".":
+	case "dump":
 		tok.kind = OP_DUMP
 	case "=":
 		tok.kind = OP_EQUAL
