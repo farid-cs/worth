@@ -11,6 +11,7 @@ const (
 	OP_PUSH
 	OP_DUMP
 	OP_DROP
+	OP_MEM
 	OP_EQUAL
 	OP_IF
 	OP_ELSE
@@ -21,6 +22,8 @@ const (
 	OP_DO
 	OP_DONE
 )
+
+const MEM_CAPACITY = 600_000
 
 type Token struct {
 	kind int
@@ -88,6 +91,8 @@ func NewToken(word string, line int, column int) Token {
 		tok.kind = OP_DONE
 	case "drop":
 		tok.kind = OP_DROP
+	case "mem":
+		tok.kind = OP_MEM
 	default:
 		tok.push, err = strconv.Atoi(word)
 		if err != nil {
@@ -208,6 +213,8 @@ func translate_to_assembly(program []Operation) {
 	out.WriteString("\n")
 	out.WriteString("entry _start\n")
 	out.WriteString("\n")
+	out.WriteString("segment readable executable\n")
+	out.WriteString("\n")
 
 	out.WriteString("dump:\n")
 	out.WriteString("	mov	rax, rdi\n")
@@ -264,6 +271,10 @@ func translate_to_assembly(program []Operation) {
 		case OP_DROP:
 			out.WriteString("	;; -- drop --\n")
 			out.WriteString("	pop	rdi\n")
+
+		case OP_MEM:
+			out.WriteString("	;; -- mem --\n")
+			out.WriteString("	push	mem\n")
 
 		case OP_EQUAL:
 			out.WriteString("	;; -- equal --\n")
@@ -324,6 +335,10 @@ func translate_to_assembly(program []Operation) {
 	out.WriteString("	mov	rax, 60\n")
 	out.WriteString("	mov	rdi, 0\n")
 	out.WriteString("	syscall\n")
+
+	out.WriteString("\n")
+	fmt.Fprintf(out, "segment readable writable\n")
+	fmt.Fprintf(out, "mem: rb %d\n", MEM_CAPACITY)
 }
 
 func compile(filepath string) {
