@@ -1,8 +1,8 @@
 10 while dup 0 > do
 	2 1 = if
-		90 .
+		90 dump
 	else
-		100 .
+		100 dump
 	fi
 	1 -
 done
