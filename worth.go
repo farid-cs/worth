@@ -10,6 +10,7 @@ const (
 	OP_MINUS
 	OP_PUSH
 	OP_DUMP
+	OP_DROP
 	OP_EQUAL
 	OP_IF
 	OP_ELSE
@@ -85,6 +86,8 @@ func NewToken(word string, line int, column int) Token {
 		tok.kind = OP_DO
 	case "done":
 		tok.kind = OP_DONE
+	case "drop":
+		tok.kind = OP_DROP
 	default:
 		tok.push, err = strconv.Atoi(word)
 		if err != nil {
@@ -257,6 +260,10 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	;; -- dump --\n")
 			out.WriteString("	pop	rdi\n")
 			out.WriteString("	call	dump\n")
+
+		case OP_DROP:
+			out.WriteString("	;; -- drop --\n")
+			out.WriteString("	pop	rdi\n")
 
 		case OP_EQUAL:
 			out.WriteString("	;; -- equal --\n")
