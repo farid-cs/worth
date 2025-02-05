@@ -12,6 +12,8 @@ const (
 	OP_DUMP
 	OP_DROP
 	OP_MEM
+	OP_LOAD
+	OP_STORE
 	OP_EQUAL
 	OP_IF
 	OP_ELSE
@@ -93,6 +95,10 @@ func NewToken(word string, line int, column int) Token {
 		tok.kind = OP_DROP
 	case "mem":
 		tok.kind = OP_MEM
+	case ",":
+		tok.kind = OP_LOAD
+	case ".":
+		tok.kind = OP_STORE
 	default:
 		tok.push, err = strconv.Atoi(word)
 		if err != nil {
@@ -275,6 +281,19 @@ func translate_to_assembly(program []Operation) {
 		case OP_MEM:
 			out.WriteString("	;; -- mem --\n")
 			out.WriteString("	push	mem\n")
+
+		case OP_LOAD:
+			out.WriteString("	;; -- load --\n")
+			out.WriteString("	pop rax\n")
+			out.WriteString("	xor rdi, rdi\n")
+			out.WriteString("	mov dil, [rax]\n")
+			out.WriteString("	push rdi\n")
+
+		case OP_STORE:
+			out.WriteString("	;; -- store --\n")
+			out.WriteString("	pop rdi\n")
+			out.WriteString("	pop rax\n")
+			out.WriteString("	mov [rax], dil\n")
 
 		case OP_EQUAL:
 			out.WriteString("	;; -- equal --\n")
