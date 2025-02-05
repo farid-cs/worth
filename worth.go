@@ -14,6 +14,13 @@ const (
 	OP_MEM
 	OP_LOAD
 	OP_STORE
+	OP_SYSCALL1
+	OP_SYSCALL2
+	OP_SYSCALL3
+	OP_SYSCALL4
+	OP_SYSCALL5
+	OP_SYSCALL6
+	OP_SYSCALL7
 	OP_EQUAL
 	OP_IF
 	OP_ELSE
@@ -99,6 +106,20 @@ func NewToken(word string, line int, column int) Token {
 		tok.kind = OP_LOAD
 	case ".":
 		tok.kind = OP_STORE
+	case "syscall1":
+		tok.kind = OP_SYSCALL1
+	case "syscall2":
+		tok.kind = OP_SYSCALL2
+	case "syscall3":
+		tok.kind = OP_SYSCALL3
+	case "syscall4":
+		tok.kind = OP_SYSCALL4
+	case "syscall5":
+		tok.kind = OP_SYSCALL5
+	case "syscall6":
+		tok.kind = OP_SYSCALL6
+	case "syscall7":
+		tok.kind = OP_SYSCALL7
 	default:
 		tok.push, err = strconv.Atoi(word)
 		if err != nil {
@@ -294,6 +315,62 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	mov [rax], dil\n")
+
+		case OP_SYSCALL1:
+			out.WriteString("	;; -- syscall1 --\n")
+			out.WriteString("	pop rax\n")
+			out.WriteString("	syscall\n")
+
+		case OP_SYSCALL2:
+			out.WriteString("	;; -- syscall1 --\n")
+			out.WriteString("	pop rax\n")
+			out.WriteString("	pop rdi\n")
+			out.WriteString("	syscall\n")
+
+		case OP_SYSCALL3:
+			out.WriteString("	;; -- syscall1 --\n")
+			out.WriteString("	pop rax\n")
+			out.WriteString("	pop rdi\n")
+			out.WriteString("	pop rsi\n")
+			out.WriteString("	syscall\n")
+
+		case OP_SYSCALL4:
+			out.WriteString("	;; -- syscall3 --\n")
+			out.WriteString("	pop rax\n")
+			out.WriteString("	pop rdi\n")
+			out.WriteString("	pop rsi\n")
+			out.WriteString("	pop rdx\n")
+			out.WriteString("	syscall\n")
+
+		case OP_SYSCALL5:
+			out.WriteString("	;; -- syscall3 --\n")
+			out.WriteString("	pop rax\n")
+			out.WriteString("	pop rdi\n")
+			out.WriteString("	pop rsi\n")
+			out.WriteString("	pop rdx\n")
+			out.WriteString("	pop r10\n")
+			out.WriteString("	syscall\n")
+
+		case OP_SYSCALL6:
+			out.WriteString("	;; -- syscall3 --\n")
+			out.WriteString("	pop rax\n")
+			out.WriteString("	pop rdi\n")
+			out.WriteString("	pop rsi\n")
+			out.WriteString("	pop rdx\n")
+			out.WriteString("	pop r10\n")
+			out.WriteString("	pop r8\n")
+			out.WriteString("	syscall\n")
+
+		case OP_SYSCALL7:
+			out.WriteString("	;; -- syscall3 --\n")
+			out.WriteString("	pop rax\n")
+			out.WriteString("	pop rdi\n")
+			out.WriteString("	pop rsi\n")
+			out.WriteString("	pop rdx\n")
+			out.WriteString("	pop r10\n")
+			out.WriteString("	pop r8\n")
+			out.WriteString("	pop r9\n")
+			out.WriteString("	syscall\n")
 
 		case OP_EQUAL:
 			out.WriteString("	;; -- equal --\n")
