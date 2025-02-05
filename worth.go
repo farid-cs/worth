@@ -322,20 +322,20 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	syscall\n")
 
 		case OP_SYSCALL2:
-			out.WriteString("	;; -- syscall1 --\n")
+			out.WriteString("	;; -- syscall2 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	syscall\n")
 
 		case OP_SYSCALL3:
-			out.WriteString("	;; -- syscall1 --\n")
+			out.WriteString("	;; -- syscall3 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	pop rsi\n")
 			out.WriteString("	syscall\n")
 
 		case OP_SYSCALL4:
-			out.WriteString("	;; -- syscall3 --\n")
+			out.WriteString("	;; -- syscall4 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	pop rsi\n")
@@ -343,7 +343,7 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	syscall\n")
 
 		case OP_SYSCALL5:
-			out.WriteString("	;; -- syscall3 --\n")
+			out.WriteString("	;; -- syscall5 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	pop rsi\n")
@@ -352,7 +352,7 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	syscall\n")
 
 		case OP_SYSCALL6:
-			out.WriteString("	;; -- syscall3 --\n")
+			out.WriteString("	;; -- syscall6 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	pop rsi\n")
@@ -362,7 +362,7 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	syscall\n")
 
 		case OP_SYSCALL7:
-			out.WriteString("	;; -- syscall3 --\n")
+			out.WriteString("	;; -- syscall7 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	pop rsi\n")
