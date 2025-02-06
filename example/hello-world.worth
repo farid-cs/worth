@@ -1,0 +1,18 @@
+mem  0 +  72 .
+mem  1 + 101 .
+mem  2 + 108 .
+mem  3 + 108 .
+mem  4 + 111 .
+mem  5 +  44 .
+mem  6 +  32 .
+mem  7 +  87 .
+mem  8 + 111 .
+mem  9 + 114 .
+mem 10 + 108 .
+mem 11 + 100 .
+mem 12 +  33 .
+mem 13 +  10 .
+
+14 mem 1 1 syscall3
+
+quit
