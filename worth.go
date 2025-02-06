@@ -30,6 +30,7 @@ const (
 	OP_WHILE
 	OP_DO
 	OP_DONE
+	OP_QUIT
 )
 
 const MEM_CAPACITY = 600_000
@@ -120,6 +121,8 @@ func NewToken(word string, line int, column int) Token {
 		tok.kind = OP_SYSCALL5
 	case "syscall6":
 		tok.kind = OP_SYSCALL6
+	case "quit":
+		tok.kind = OP_QUIT
 	default:
 		tok.push, err = strconv.Atoi(word)
 		if err != nil {
@@ -425,12 +428,14 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	;; -- done --\n")
 			fmt.Fprintf(out, "	jmp .addr_%d\n", op.arg)
 			fmt.Fprintf(out, ".addr_%d:\n", addr)
+
+		case OP_QUIT:
+			out.WriteString("	;; -- quit --\n")
+			out.WriteString("	mov	rax, 60\n")
+			out.WriteString("	mov	rdi, 0\n")
+			out.WriteString("	syscall\n")
 		}
 	}
-
-	out.WriteString("	mov	rax, 60\n")
-	out.WriteString("	mov	rdi, 0\n")
-	out.WriteString("	syscall\n")
 
 	out.WriteString("\n")
 	fmt.Fprintf(out, "segment readable writable\n")
