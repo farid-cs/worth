@@ -14,13 +14,13 @@ const (
 	OP_MEM
 	OP_LOAD
 	OP_STORE
+	OP_SYSCALL0
 	OP_SYSCALL1
 	OP_SYSCALL2
 	OP_SYSCALL3
 	OP_SYSCALL4
 	OP_SYSCALL5
 	OP_SYSCALL6
-	OP_SYSCALL7
 	OP_EQUAL
 	OP_IF
 	OP_ELSE
@@ -106,6 +106,8 @@ func NewToken(word string, line int, column int) Token {
 		tok.kind = OP_LOAD
 	case ".":
 		tok.kind = OP_STORE
+	case "syscall0":
+		tok.kind = OP_SYSCALL0
 	case "syscall1":
 		tok.kind = OP_SYSCALL1
 	case "syscall2":
@@ -118,8 +120,6 @@ func NewToken(word string, line int, column int) Token {
 		tok.kind = OP_SYSCALL5
 	case "syscall6":
 		tok.kind = OP_SYSCALL6
-	case "syscall7":
-		tok.kind = OP_SYSCALL7
 	default:
 		tok.push, err = strconv.Atoi(word)
 		if err != nil {
@@ -316,25 +316,25 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	pop rax\n")
 			out.WriteString("	mov [rax], dil\n")
 
-		case OP_SYSCALL1:
+		case OP_SYSCALL0:
 			out.WriteString("	;; -- syscall1 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	syscall\n")
 
-		case OP_SYSCALL2:
+		case OP_SYSCALL1:
 			out.WriteString("	;; -- syscall2 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	syscall\n")
 
-		case OP_SYSCALL3:
+		case OP_SYSCALL2:
 			out.WriteString("	;; -- syscall3 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
 			out.WriteString("	pop rsi\n")
 			out.WriteString("	syscall\n")
 
-		case OP_SYSCALL4:
+		case OP_SYSCALL3:
 			out.WriteString("	;; -- syscall4 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
@@ -342,7 +342,7 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	pop rdx\n")
 			out.WriteString("	syscall\n")
 
-		case OP_SYSCALL5:
+		case OP_SYSCALL4:
 			out.WriteString("	;; -- syscall5 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
@@ -351,7 +351,7 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	pop r10\n")
 			out.WriteString("	syscall\n")
 
-		case OP_SYSCALL6:
+		case OP_SYSCALL5:
 			out.WriteString("	;; -- syscall6 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
@@ -361,7 +361,7 @@ func translate_to_assembly(program []Operation) {
 			out.WriteString("	pop r8\n")
 			out.WriteString("	syscall\n")
 
-		case OP_SYSCALL7:
+		case OP_SYSCALL6:
 			out.WriteString("	;; -- syscall7 --\n")
 			out.WriteString("	pop rax\n")
 			out.WriteString("	pop rdi\n")
