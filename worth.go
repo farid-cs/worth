@@ -476,5 +476,8 @@ func main() {
 	}
 
 	compile(os.Args[1])
-	fasm.Run()
+	if fasm.Run() != nil {
+		fmt.Fprintf(os.Stderr, "error: fasm failed\n")
+		os.Exit(1)
+	}
 }
