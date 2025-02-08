@@ -37,7 +37,7 @@ const MEM_CAPACITY = 600_000
 
 type Token struct {
 	kind int
-	push int
+	value int
 	line int
 	column int
 }
@@ -124,7 +124,7 @@ func NewToken(word string, line int, column int) Token {
 	case "quit":
 		tok.kind = OP_QUIT
 	default:
-		tok.push, err = strconv.Atoi(word)
+		tok.value, err = strconv.Atoi(word)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%d:%d: %s\n", tok.line, tok.column, err)
 			os.Exit(1)
@@ -178,7 +178,7 @@ func generate_program(tokens []Token) []Operation {
 		op.line = tok.line
 		op.column = tok.column
 		if op.kind == OP_PUSH {
-			op.arg = tok.push
+			op.arg = tok.value
 		}
 
 		program = append(program, op)
