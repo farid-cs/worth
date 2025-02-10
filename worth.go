@@ -6,6 +6,11 @@ import "os/exec"
 import "strconv"
 
 const (
+	TOK_WORD = iota
+	TOK_INT
+)
+
+const (
 	OP_PLUS = iota
 	OP_MINUS
 	OP_PUSH
@@ -37,7 +42,8 @@ const MEM_CAPACITY = 600_000
 
 type Token struct {
 	kind int
-	value int
+	ivalue int
+	wvalue string
 	line int
 	column int
 }
@@ -67,82 +73,35 @@ func isspace(char byte) bool {
 	return false
 }
 
-func NewToken(word string, line int, column int) Token {
+func lex_word(text string, line int, column int) (Token, string, int, int) {
 	var tok Token
+	var toklen int
 	var err error
 
-	tok.line = line
-	tok.column = column
-
-	switch word {
-	case "+":
-		tok.kind = OP_PLUS
-	case "-":
-		tok.kind = OP_MINUS
-	case "dump":
-		tok.kind = OP_DUMP
-	case "=":
-		tok.kind = OP_EQUAL
-	case "if":
-		tok.kind = OP_IF
-	case "else":
-		tok.kind = OP_ELSE
-	case "fi":
-		tok.kind = OP_FI
-	case "dup":
-		tok.kind = OP_DUP
-	case ">":
-		tok.kind = OP_GT
-	case "while":
-		tok.kind = OP_WHILE
-	case "do":
-		tok.kind = OP_DO
-	case "done":
-		tok.kind = OP_DONE
-	case "drop":
-		tok.kind = OP_DROP
-	case "mem":
-		tok.kind = OP_MEM
-	case ",":
-		tok.kind = OP_LOAD
-	case ".":
-		tok.kind = OP_STORE
-	case "syscall0":
-		tok.kind = OP_SYSCALL0
-	case "syscall1":
-		tok.kind = OP_SYSCALL1
-	case "syscall2":
-		tok.kind = OP_SYSCALL2
-	case "syscall3":
-		tok.kind = OP_SYSCALL3
-	case "syscall4":
-		tok.kind = OP_SYSCALL4
-	case "syscall5":
-		tok.kind = OP_SYSCALL5
-	case "syscall6":
-		tok.kind = OP_SYSCALL6
-	case "quit":
-		tok.kind = OP_QUIT
-	default:
-		tok.value, err = strconv.Atoi(word)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%d:%d: %s\n", tok.line, tok.column, err)
-			os.Exit(1)
-		}
-		tok.kind = OP_PUSH
+	for toklen != len(text) && !isspace(text[toklen]) {
+		toklen += 1
 	}
-	return tok
+
+	tok.ivalue, err = strconv.Atoi(text[:toklen])
+	if err == nil {
+		column += toklen
+		tok.kind = TOK_INT
+		return tok, text[toklen:], line, column
+	}
+
+	column += toklen
+	tok.kind = TOK_WORD
+	tok.wvalue = text[:toklen]
+	return tok, text[toklen:], line, column
 }
 
 func lex_text(text string) []Token {
 	var tokens []Token
+	var token Token
 	var line = 1
 	var column = 1
 
-	for len(text) > 0 {
-		var token Token
-		var toklen = 0
-
+	for len(text) != 0 {
 		if isspace(text[0]) {
 			if text[0] == '\n' {
 				line += 1
@@ -153,18 +112,73 @@ func lex_text(text string) []Token {
 			continue
 		}
 
-		for toklen != len(text) && !isspace(text[toklen]) {
-			toklen += 1
-		}
-
-		token = NewToken(text[:toklen], line, column)
+		token, text, line, column = lex_word(text, line, column)
 		tokens = append(tokens, token)
-
-		column += toklen
-		text = text[toklen:]
 	}
 
 	return tokens
+}
+
+func token_to_operation(tok Token) Operation {
+	op := Operation{line: tok.line, column: tok.column}
+
+	if tok.kind == TOK_INT {
+		op.kind = OP_PUSH
+		op.arg = tok.ivalue
+		return op
+	}
+
+	switch tok.wvalue {
+	case "+":
+		op.kind = OP_PLUS
+	case "-":
+		op.kind = OP_MINUS
+	case "dump":
+		op.kind = OP_DUMP
+	case "=":
+		op.kind = OP_EQUAL
+	case "if":
+		op.kind = OP_IF
+	case "else":
+		op.kind = OP_ELSE
+	case "fi":
+		op.kind = OP_FI
+	case "dup":
+		op.kind = OP_DUP
+	case ">":
+		op.kind = OP_GT
+	case "while":
+		op.kind = OP_WHILE
+	case "do":
+		op.kind = OP_DO
+	case "done":
+		op.kind = OP_DONE
+	case "drop":
+		op.kind = OP_DROP
+	case "mem":
+		op.kind = OP_MEM
+	case ",":
+		op.kind = OP_LOAD
+	case ".":
+		op.kind = OP_STORE
+	case "syscall0":
+		op.kind = OP_SYSCALL0
+	case "syscall1":
+		op.kind = OP_SYSCALL1
+	case "syscall2":
+		op.kind = OP_SYSCALL2
+	case "syscall3":
+		op.kind = OP_SYSCALL3
+	case "syscall4":
+		op.kind = OP_SYSCALL4
+	case "syscall5":
+		op.kind = OP_SYSCALL5
+	case "syscall6":
+		op.kind = OP_SYSCALL6
+	case "quit":
+		op.kind = OP_QUIT
+	}
+	return op
 }
 
 func generate_program(tokens []Token) []Operation {
@@ -172,16 +186,7 @@ func generate_program(tokens []Token) []Operation {
 	var stack []int
 
 	for _, tok := range tokens {
-		op := Operation{arg: -1}
-
-		op.kind = tok.kind
-		op.line = tok.line
-		op.column = tok.column
-		if op.kind == OP_PUSH {
-			op.arg = tok.value
-		}
-
-		program = append(program, op)
+		program = append(program, token_to_operation(tok))
 	}
 
 	for addr, op := range program {
